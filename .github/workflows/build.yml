@@ -1,0 +1,55 @@
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+env:
+  image_version: 1
+  base_image_name: ci-base
+  new_image_name: ci-new
+  docker_user: simberg
+
+jobs:
+  build_and_deploy:
+    name: Build and deploy images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Ref
+        run: echo ${{ github.ref }}
+      - name: On main
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: echo on main
+      - name: Not on main
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: echo not on main
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.docker_user }}
+          password: ${{ secrets.DOCKER_PASS }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver: docker
+      - name: Info
+        run: docker images
+      - name: Build base image
+        uses: docker/build-push-action@v2
+        with:
+          file: Dockerfile.base
+          tags: ${{ env.docker_user }}/${{ env.base_image_name }}:latest,${{ env.docker_user }}/${{ env.base_image_name }}:${{ env.image_version }}
+          load: true
+          push: ${{ github.ref == 'refs/heads/main' }}
+      - name: Info
+        run: docker images
+      - name: Build new layer
+        uses: docker/build-push-action@v2
+        with:
+          file: Dockerfile.new
+          build-args: BASE_IMAGE=${{ env.docker_user }}/${{ env.base_image_name }}:${{ env.image_version }}
+          tags: ${{ env.docker_user }}/${{ env.new_image_name }}:latest,${{ env.docker_user }}/${{ env.new_image_name }}:${{ env.image_version }}
+          push: ${{ github.ref == 'refs/heads/main' }}
+      - name: Info
+        run: docker images
