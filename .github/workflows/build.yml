@@ -4,7 +4,7 @@ on:
   pull_request:
 
 env:
-  image_version: 1
+  image_version: 2
   base_image_name: ci-base
   new_image_name: ci-new
   docker_user: simberg
