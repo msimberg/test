@@ -41,7 +41,7 @@ jobs:
           file: Dockerfile.base
           tags: ${{ env.docker_user }}/${{ env.base_image_name }}:latest,${{ env.docker_user }}/${{ env.base_image_name }}:${{ env.image_version }}
           load: true
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: false
       - name: Push base image
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v2
